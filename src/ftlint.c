@@ -15,6 +15,7 @@
 
 #include <ft2build.h>
 #include <freetype/freetype.h>
+#include <freetype/ftoutln.h>
 #include <freetype/ftbitmap.h>
 
 
@@ -81,6 +82,58 @@
       "  -q      Quiet mode without the rendering analysis\n" );
 
     exit( 1 );
+  }
+
+
+  static void
+  Examine( FT_GlyphSlot  slot )
+  {
+    unsigned long  format = slot->format;
+    FT_Outline*    outline = &slot->outline;
+    short          c, p, first, last;
+    FT_Vector      u, v;
+    FT_Pos         taxi;
+    FT_BBox        cbox;
+
+
+    if ( format != FT_GLYPH_FORMAT_OUTLINE )
+    {
+      putchar( ' ' );
+      putchar( ( format >> 24 ) & 0xFF );
+      putchar( ( format >> 16 ) & 0xFF );
+      putchar( ( format >>  8 ) & 0xFF );
+      putchar( ( format       ) & 0xFF );
+      putchar( ' ' );
+      return;
+    }
+
+    taxi = 0;
+    last = -1;
+    for ( c = 0; c < outline->n_contours; c++ )
+    {
+      first = last + 1;
+      last = outline->contours[c];
+
+      u = outline->points[last];
+      for ( p = first; p <= last; p++ )
+      {
+        v = outline->points[p];
+
+        taxi += v.x > u.x ? v.x - u.x : u.x - v.x;
+        taxi += v.y > u.y ? v.y - u.y : u.y - v.y;
+
+        u = v;
+      }
+    }
+
+    if ( taxi )
+    {
+      FT_Outline_Get_CBox( outline, &cbox );
+      printf( "%5.2f ", 0.5 * taxi /
+                        ( cbox.xMax - cbox.xMin + cbox.yMax - cbox.yMin ) );
+    }
+    else
+      printf( " void " );
   }
 
 
@@ -281,9 +334,9 @@
 
       if ( !quiet )
       {
-        /*        "NNNNN AAAxBBBB X.XXXX Y.YYYY MMDD55MMDD55MMDD55MMDD55MMDD55MM" */
-        printf( "\n GID  imgsize  Xacut  Yacut  MD5 hashsum" );
-        printf( "\n-------------------------------------------------------------\n" );
+        /*        "NNNNN SS.SS WWWxHHHH X.XXXX Y.YYYY MMDD55MMDD55MMDD55MMDD55MMDD55MM" */
+        printf( "\n GID  shape imgsize  Xacut  Yacut  MD5 hashsum" );
+        printf( "\n-------------------------------------------------------------------\n" );
       }
 
       Fail = 0;
@@ -308,6 +361,8 @@
           continue;
 
         printf( "%5u ", id );
+
+        Examine( face->glyph );
 
         error = FT_Render_Glyph( face->glyph, render_mode );
         if ( error && error != FT_Err_Cannot_Render_Glyph )
