@@ -79,7 +79,8 @@
       "  -f L    Use hex number L as load flags (see `FT_LOAD_XXX')\n"
       "  -r N    Set render mode to N\n"
       "  -i I-J  Range of glyph indices to use (default: all)\n"
-      "  -q      Quiet mode without the rendering analysis\n" );
+      "  -q      Quiet mode without the rendering analysis\n"
+      "\n" );
 
     exit( 1 );
   }
@@ -230,9 +231,6 @@
 
     execname = ft_basename( argv[0] );
 
-    if ( argc < 3 )
-      Usage( execname );
-
     while ( ( opt =  getopt( argc, argv, "f:r:i:q") ) != -1)
     {
 
@@ -285,8 +283,7 @@
     argc -= optind;
     argv += optind;
 
-
-    if( sscanf( argv[0], "%d", &ptsize) != 1 )
+    if ( argc < 2 || sscanf( argv[0], "%d", &ptsize) != 1 )
       Usage( execname );
 
     error = FT_Init_FreeType( &library );
