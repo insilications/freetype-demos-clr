@@ -362,7 +362,7 @@
         Examine( face->glyph );
 
         error = FT_Render_Glyph( face->glyph, render_mode );
-        if ( error && error != FT_Err_Cannot_Render_Glyph )
+        if ( error && face->glyph->format != FT_GLYPH_FORMAT_BITMAP )
         {
           Error( "rendering " );
           Fail++;
