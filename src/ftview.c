@@ -91,6 +91,7 @@
     const char*    dims;
     const char*    device;
     int            render_mode;
+    grColor        green;
 
     int            res;
     int            ptsize;            /* current point size, 26.6 format */
@@ -111,7 +112,7 @@
     unsigned char  filter_weights[5];
     int            fw_idx;
 
-  } status = { "", DIM, NULL, RENDER_MODE_ALL,
+  } status = { "", DIM, NULL, RENDER_MODE_ALL, { 0 },
                72, 48, 1, 0.04, 0.04, 0.02, 0.22,
                0, 0, 0, 0, 0, 0,
                FT_LCD_FILTER_DEFAULT, { 0x08, 0x4D, 0x56, 0x4D, 0x08 }, 2 };
@@ -243,7 +244,7 @@
       if ( slot->advance.x == 0 )
       {
         grFillRect( display->bitmap, x, y - width, width, width,
-                    display->warn_color );
+                    status.green );
         x += width;
       }
 
@@ -386,7 +387,7 @@
       if ( slot->advance.x == 0 )
       {
         grFillRect( display->bitmap, x, y - width, width, width,
-                    display->warn_color );
+                    status.green );
         x += width;
       }
 
@@ -574,7 +575,7 @@
       if ( slot->advance.x == 0 )
       {
         grFillRect( display->bitmap, x, y - width, width, width,
-                    display->warn_color );
+                    status.green );
         x += width;
       }
 
@@ -1828,6 +1829,8 @@
       Fatal( "could not allocate display surface" );
 
     FTDemo_Icon( handle, display );
+
+    status.green = grFindColor( display->bitmap, 128, 255, 128, 255 );
 
     event_font_change( 0 );
 
