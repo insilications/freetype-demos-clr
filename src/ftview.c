@@ -1829,8 +1829,6 @@
 
     FTDemo_Icon( handle, display );
 
-    status.num_fails = 0;
-
     event_font_change( 0 );
 
     do
