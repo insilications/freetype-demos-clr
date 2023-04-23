@@ -244,7 +244,8 @@
         grFillRect( display->bitmap, x, y - width, width, width,
                     status.green );
 
-        if ( slot->bitmap_left < -width >> 2 )
+        /* advance pen immediately if the glyph is behind the origin */
+        if ( slot->bitmap_left + (int)slot->bitmap.width <= 0 )
         {
           x     += width;
           width  = 0;
@@ -394,7 +395,8 @@
         grFillRect( display->bitmap, x, y - width, width, width,
                     status.green );
 
-        if ( slot->bitmap_left < -width >> 2 )
+        /* advance pen immediately if the glyph is behind the origin */
+        if ( slot->bitmap_left + (int)slot->bitmap.width <= 0 )
         {
           x     += width;
           width  = 0;
@@ -589,7 +591,8 @@
         grFillRect( display->bitmap, x, y - width, width, width,
                     status.green );
 
-        if ( slot->bitmap_left < -width >> 2 )
+        /* advance pen immediately if the glyph is behind the origin */
+        if ( slot->bitmap_left + (int)slot->bitmap.width <= 0 )
         {
           x     += width;
           width  = 0;
