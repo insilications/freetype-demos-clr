@@ -239,16 +239,23 @@
         }
       }
 
-      /* extra space between glyphs */
-      x++;
       if ( slot->advance.x == 0 )
       {
         grFillRect( display->bitmap, x, y - width, width, width,
                     status.green );
-        x += width;
+
+        if ( slot->bitmap_left < -width >> 2 )
+        {
+          x     += width;
+          width  = 0;
+        }
       }
+      else
+        width = 0;
 
       error = FTDemo_Draw_Glyph( handle, display, glyph, &x, &y );
+
+      x += width + 1;  /* with extra space between glyphs */
 
       if ( error )
         goto Next;
@@ -382,16 +389,23 @@
           break;
       }
 
-      /* extra space between glyphs */
-      x++;
       if ( slot->advance.x == 0 )
       {
         grFillRect( display->bitmap, x, y - width, width, width,
                     status.green );
-        x += width;
+
+        if ( slot->bitmap_left < -width >> 2 )
+        {
+          x     += width;
+          width  = 0;
+        }
       }
+      else
+        width = 0;
 
       error = FTDemo_Draw_Slot( handle, display, slot, &x, &y );
+
+      x += width + 1;  /* with extra space between glyphs */
 
       if ( error )
         goto Next;
@@ -570,16 +584,23 @@
           break;
       }
 
-      /* extra space between glyphs */
-      x++;
       if ( slot->advance.x == 0 )
       {
         grFillRect( display->bitmap, x, y - width, width, width,
                     status.green );
-        x += width;
+
+        if ( slot->bitmap_left < -width >> 2 )
+        {
+          x     += width;
+          width  = 0;
+        }
       }
+      else
+        width = 0;
 
       error = FTDemo_Draw_Slot( handle, display, slot, &x, &y );
+
+      x += width + 1;  /* with extra space between glyphs */
 
       if ( error )
         goto Next;
