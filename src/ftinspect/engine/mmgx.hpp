@@ -33,6 +33,7 @@ struct MMGXAxisInfo
   bool isMM;
 
   static MMGXState get(Engine* engine,
+                       unsigned namedInstanceIndex,
                        std::vector<MMGXAxisInfo>& infos);
 
 

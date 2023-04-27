@@ -359,6 +359,8 @@ Engine::loadFont(int fontIndex,
     else
       fontType_ = FontType_Other;
 
+    switchNamedInstance(namedInstanceIndex);
+
     curCharMaps_.clear();
     curCharMaps_.reserve(ftFallbackFace_->num_charmaps);
     for (int i = 0; i < ftFallbackFace_->num_charmaps; i++)
@@ -366,7 +368,8 @@ Engine::loadFont(int fontIndex,
 
     SFNTName::get(this, curSFNTNames_);
     loadPaletteInfos();
-    curMMGXState_ = MMGXAxisInfo::get(this, curMMGXAxes_);
+    curMMGXState_ = MMGXAxisInfo::get(
+        this, static_cast<unsigned>(namedInstanceIndex), curMMGXAxes_);
   }
 
   curNumGlyphs_ = numGlyphs;
@@ -1032,6 +1035,27 @@ Engine::loadPaletteInfos()
                                   paletteData_,
                                   i,
                                   &curSFNTNames_);
+}
+
+
+void
+Engine::switchNamedInstance(int index)
+{
+  if (!ftFallbackFace_ || !FT_HAS_MULTIPLE_MASTERS(ftFallbackFace_))
+    return;
+  auto err = FT_Set_Named_Instance(ftFallbackFace_, index);
+  if (err)
+  {
+    // XXX error handling
+  }
+  if (ftSize_)
+  {
+    err = FT_Set_Named_Instance(ftSize_->face, index);
+    if (err)
+    {
+      // XXX error handling
+    }
+  }
 }
 
 

@@ -10,7 +10,8 @@
 
 
 MMGXState
-MMGXAxisInfo::get(Engine* engine,
+MMGXAxisInfo::get(Engine* engine, 
+                  unsigned namedInstanceIndex,
                   std::vector<MMGXAxisInfo>& infos)
 {
   auto face = engine->currentFallbackFtFace();
@@ -37,6 +38,10 @@ MMGXAxisInfo::get(Engine* engine,
     return state;
   }
 
+  FT_Var_Named_Style* namedInstance = nullptr;
+  if (namedInstanceIndex > 0 && namedInstanceIndex <= mm->num_namedstyles)
+    namedInstance = &mm->namedstyle[namedInstanceIndex - 1]; // 0 means default
+
   infos.resize(mm->num_axis);
 
   auto& sfnt = engine->currentFontSFNTNames();
@@ -53,6 +58,9 @@ MMGXAxisInfo::get(Engine* engine,
     unsigned int flags = 0;
     FT_Get_Var_Axis_Flags(mm, i, &flags);
     info.hidden = (flags & FT_VAR_AXIS_FLAG_HIDDEN) != 0;
+
+    if (namedInstance)
+      info.def = namedInstance->coords[i] / 65536.0;
 
     auto nameSet = false;
     if (state == MMGXState::GX_OVF)

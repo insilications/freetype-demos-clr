@@ -286,6 +286,7 @@ private:
 
   void queryEngine();
   void loadPaletteInfos();
+  void switchNamedInstance(int index);
 
   // It is safe to put the implementation into the corresponding cpp file.
   template <class Func>
