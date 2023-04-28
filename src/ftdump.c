@@ -687,7 +687,7 @@
       else
         continue;
 
-      printf( "  %2lu: %c%c%c%c %02X%02X%02X%02X...\n", i,
+      printf( "  %2lu: %c%c%c%c   %02X %02X %02X %02X ...\n", i,
                                    (FT_Char)( tag >> 24 ),
                                    (FT_Char)( tag >> 16 ),
                                    (FT_Char)( tag >>  8 ),
