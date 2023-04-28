@@ -838,18 +838,51 @@
 
 
   static void
+  get_english_name_entry( FT_Face       face,
+                          FT_UInt       strid,
+                          FT_SfntName*  entry )
+  {
+    FT_UInt  num_names = FT_Get_Sfnt_Name_Count( face );
+    FT_UInt  i;
+
+    FT_SfntName  name;
+
+
+    for ( i = 0; i < num_names; i++ )
+    {
+      error = FT_Get_Sfnt_Name( face, i, &name );
+      if ( error )
+        continue;
+
+      if ( name.name_id == strid )
+      {
+        /* XXX we don't have support for Apple's new `ltag' table yet, */
+        /* thus we ignore TT_PLATFORM_APPLE_UNICODE                    */
+        if ( ( name.platform_id == TT_PLATFORM_MACINTOSH &&
+               name.language_id == TT_MAC_LANGID_ENGLISH )        ||
+             ( name.platform_id == TT_PLATFORM_MICROSOFT        &&
+               ( name.language_id & 0xFF )
+                                == TT_MS_LANGID_ENGLISH_GENERAL ) )
+          break;
+      }
+    }
+
+    if ( i < num_names )
+      *entry = name;
+  }
+
+
+  static void
   Print_MM_Axes( FT_Face  face )
   {
     FT_MM_Var*       mm;
     FT_Multi_Master  dummy;
-    FT_UInt          is_GX, i, num_names;
+    FT_UInt          is_GX, i;
 
 
     /* MM or GX axes */
     error = FT_Get_Multi_Master( face, &dummy );
     is_GX = error ? 1 : 0;
-
-    printf( "%s axes\n", is_GX ? "GX" : "MM" );
 
     error = FT_Get_MM_Var( face, &mm );
     if ( error )
@@ -858,7 +891,7 @@
       return;
     }
 
-    num_names = FT_Get_Sfnt_Name_Count( face );
+    printf( "%s axes\n", is_GX ? "GX" : "MM" );
 
     for ( i = 0; i < mm->num_axis; i++ )
     {
@@ -868,33 +901,7 @@
       name.string = NULL;
 
       if ( is_GX )
-      {
-        FT_UInt  strid = mm->axis[i].strid;
-        FT_UInt  j;
-
-
-        /* iterate over all name entries        */
-        /* to find an English entry for `strid' */
-
-        for ( j = 0; j < num_names; j++ )
-        {
-          error = FT_Get_Sfnt_Name( face, j, &name );
-          if ( error )
-            continue;
-
-          if ( name.name_id == strid )
-          {
-            /* XXX we don't have support for Apple's new `ltag' table yet, */
-            /* thus we ignore TT_PLATFORM_APPLE_UNICODE                    */
-            if ( ( name.platform_id == TT_PLATFORM_MACINTOSH &&
-                   name.language_id == TT_MAC_LANGID_ENGLISH )        ||
-                 ( name.platform_id == TT_PLATFORM_MICROSOFT        &&
-                   ( name.language_id & 0xFF )
-                                    == TT_MS_LANGID_ENGLISH_GENERAL ) )
-              break;
-          }
-        }
-      }
+        get_english_name_entry( face, mm->axis[i].strid, &name );
 
       if ( name.string )
       {
