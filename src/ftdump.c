@@ -873,10 +873,11 @@
 
 
   static void
-  Print_MM_Axes( FT_Face  face )
+  Print_MM_Info( FT_Face  face )
   {
     FT_MM_Var*       mm;
     FT_Multi_Master  dummy;
+    FT_SfntName      name;
     FT_UInt          is_GX, i;
 
 
@@ -891,32 +892,132 @@
       return;
     }
 
-    printf( "%s axes\n", is_GX ? "GX" : "MM" );
+    printf( "%s info\n", is_GX ? "GX" : "MM" );
+
+    printf( "  axes (%u)\n", mm->num_axis );
 
     for ( i = 0; i < mm->num_axis; i++ )
     {
-      FT_SfntName  name;
-
-
       name.string = NULL;
 
       if ( is_GX )
         get_english_name_entry( face, mm->axis[i].strid, &name );
 
+      printf( "    %u: ", i );
       if ( name.string )
       {
         if ( name.platform_id == TT_PLATFORM_MACINTOSH )
-          put_ascii( name.string, name.string_len, 3 );
+          put_ascii( name.string, name.string_len, 0 );
         else
-          put_unicode_be16( name.string, name.string_len, 3, utf8 );
+          put_unicode_be16( name.string, name.string_len, 0, utf8 );
       }
       else
-        printf( "   %s", mm->axis[i].name );
+        printf( "%s", mm->axis[i].name );
 
-      printf( ": [%g;%g], default %g\n",
+      printf( ", [%g;%g], default %g\n",
               mm->axis[i].minimum / 65536.0,
               mm->axis[i].maximum / 65536.0,
               mm->axis[i].def / 65536.0 );
+    }
+
+    if ( is_GX )
+    {
+      FT_Fixed*    coords;
+      const char*  ps_name;
+
+      FT_Long              instance_count;
+      FT_UInt              default_named_instance;
+      FT_Var_Named_Style*  named_styles;
+
+
+      /* Show Variation PostScript Name Prefix. */
+
+      coords = (FT_Fixed*)malloc( mm->num_axis * sizeof ( FT_Fixed ) );
+      if ( coords == NULL )
+        return;
+
+      /* We temporarily activate variation font handling.  Because we */
+      /* use the default axes, the now retrieved PS name is identical */
+      /* to the PS name prefix.                                       */
+      FT_Get_Var_Design_Coordinates( face, mm->num_axis, coords );
+      FT_Set_Var_Design_Coordinates( face, mm->num_axis, coords );
+
+      ps_name = FT_Get_Postscript_Name( face );
+      if ( ps_name == NULL )
+        ps_name = "UNAVAILABLE";
+
+      printf( "\n"
+              "  VF PS name prefix: %s\n", ps_name );
+
+      /* Switch off variation font handling. */
+      FT_Set_Var_Design_Coordinates( face, 0, NULL );
+
+      free( coords );
+
+
+      /* Show named instances. */
+
+      instance_count = face->style_flags >> 16;
+      named_styles   = mm->namedstyle;
+
+      FT_Get_Default_Named_Instance( face, &default_named_instance );
+      default_named_instance--;   /* `named_styles` is a zero-based array */
+
+      printf( "\n" );
+      printf( "  named instances (%lu)\n", instance_count );
+
+      for ( i = 0; i < instance_count; i++ )
+      {
+        int        pos;
+        FT_UInt    j;
+        FT_Bool    semicolon;
+        FT_Fixed*  c;
+
+
+        /* Since FreeType starts the instance numbering with value 1 */
+        /* in `face_index` we report the same here for consistency.  */
+        pos = printf( "    %u: ", i + 1);
+
+        name.string = NULL;
+        get_english_name_entry( face, named_styles[i].strid, &name );
+        if ( name.string )
+        {
+          if ( name.platform_id == TT_PLATFORM_MACINTOSH )
+            put_ascii( name.string, name.string_len, 0 );
+          else
+            put_unicode_be16( name.string, name.string_len, 0, utf8 );
+        }
+        else
+          printf( "UNAVAILABLE" );
+        printf( "%s\n", i == default_named_instance ? " (default)" : "" );
+
+        name.string = NULL;
+        get_english_name_entry( face, named_styles[i].psid, &name );
+        printf( "%*s   PS: ", pos, "" );
+        if ( name.string )
+        {
+          if ( name.platform_id == TT_PLATFORM_MACINTOSH )
+            put_ascii( name.string, name.string_len, 0 );
+          else
+            put_unicode_be16( name.string, name.string_len, 0, utf8 );
+        }
+        else
+          printf( "UNAVAILABLE" );
+        printf( "\n" );
+
+        semicolon = 0;
+        c         = named_styles[i].coords;
+
+        printf( "%*scoord: (", pos, "" );
+        for ( j = 0; j < mm->num_axis; j++ )
+        {
+          printf( "%s%g", semicolon ? ";" : "", c[j] / 65536.0);
+          semicolon = 1;
+        }
+        printf( ")\n" );
+      }
+
+      printf( "\n" );
     }
 
     FT_Done_MM_Var( face->glyph->library, mm );
@@ -1492,7 +1593,7 @@
       if ( FT_HAS_MULTIPLE_MASTERS( face ) )
       {
         printf( "\n" );
-        Print_MM_Axes( face );
+        Print_MM_Info( face );
       }
 
       FT_Done_Face( face );
