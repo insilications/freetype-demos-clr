@@ -37,6 +37,11 @@
     {
       switch ( string[i] )
       {
+      case '\0':
+        *out++ = '\\';
+        *out++ = '0';
+        break;
+
       case '\n':
         *out++ = '\\';
         *out++ = 'n';
@@ -125,6 +130,7 @@
         }
         break;
 
+      case '\0':
       case '\r':
       case '\t':
       case '\\':
@@ -196,6 +202,11 @@
 
       switch ( ch )
       {
+      case '\0':
+        *out++ = '\\';
+        *out++ = '0';
+        continue;
+
       case '\n':
         *out++ = '\\';
         *out++ = 'n';
@@ -350,6 +361,7 @@
         }
         continue;
 
+      case '\0':
       case '\r':
       case '\t':
       case '\\':
