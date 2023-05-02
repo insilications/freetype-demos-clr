@@ -24,6 +24,7 @@
 #include <freetype/tttags.h>
 #include <freetype/t1tables.h>
 
+#include <freetype/ftcid.h>
 
   /* error messages */
 #undef FTERRORS_H_
@@ -114,7 +115,7 @@
              execname );
 
     fprintf( stderr,
-      "  -c, -C    Print charmap coverage.\n"
+      "  -c, -C    Print charmap coverage and/or CID coverage.\n"
       "  -n        Print SFNT 'name' table or Type1 font info.\n"
       "  -p        Print TrueType programs.\n"
       "  -t        Print SFNT table list.\n"
@@ -477,6 +478,132 @@
             fi->version );
     printf( "%s%s\n", Name_Field( "Weight" ),
             fi->weight );
+  }
+
+
+  /*
+   * FreeType 2 API supports 32-bit gid, but
+   * the CIDFont does not support 32-bit CID,
+   * because of the 64k limit of the array
+   * and dictionary objects in PostScript.
+   */
+#ifndef FT_CID_MAX
+#define FT_CID_MAX 0xFFFFU
+#endif
+  /*
+   * Print a range specified by 2 integers.
+   */
+  static void
+  Print_UInt_Range( FT_UInt  from,
+                    FT_UInt  to,
+                    char*    is_first )
+  {
+    if (!(*is_first))
+      printf(",");
+
+    if ( from == to )
+      printf( "%d", from );
+    else if ( from < to )
+      printf( "%d-%d", from, to );
+
+    *is_first = 0;
+  }
+
+
+  /*
+   * Print implemented CIDs by calling
+   *   FT_Get_CID_From_Glyph_Index() for all GIDs.
+   *
+   */
+  static void
+  Print_CIDs( FT_Face  face )
+  {
+    FT_UInt  gid = 0, max_gid = FT_UINT_MAX;
+    FT_UInt  cid = 0, rng_from = 0, rng_to = 0;
+    char     is_first_rng = 1;
+    
+
+    if ( face->num_glyphs < 1 )
+      return;
+
+    printf( "\n" );
+    printf( "CID coverage\n" );
+    printf( "   " );
+
+    if ( (FT_ULong)face->num_glyphs < FT_UINT_MAX )
+      max_gid = (FT_UInt)face->num_glyphs;
+
+    for ( gid = 0; gid <= max_gid; gid ++ )
+    {
+      if ( FT_Get_CID_From_Glyph_Index( face, gid, &cid ) )
+        continue;
+
+      if ( FT_CID_MAX < cid )
+      {
+        fprintf( stderr, "gid=%d resulted too large CID=%d, ignore it\n", gid, cid );
+        break;
+      }
+
+      if ( rng_to == cid )
+        continue;
+      else if ( cid < rng_to )
+      {
+        fprintf( stderr, "Unordered GID-CID map is found, please file your issue on "
+                         "https://gitlab.freedesktop.org/groups/freetype/-/issues\n" );
+        exit( 1 );
+      }
+      else if ( rng_to + 1 == cid )
+      {
+        rng_to = cid;
+        continue;
+      }
+
+      /* Found a gap (rng_to + 1 < cid), print the last range */
+      Print_UInt_Range( rng_from, rng_to, &is_first_rng );
+      rng_to = rng_from = cid;
+    }
+
+    Print_UInt_Range( rng_from, rng_to, &is_first_rng );
+
+    printf( "\n" );
+  }
+
+
+  /*
+   * Print_CIDFontInfo_Dictionary() might be conventional,
+   * but other tables, like gcid, can have ROS info too.
+   */
+  static void
+  Print_ROS_From_Face( FT_Face  face )
+  {
+    FT_Bool      is_cid = 0;
+    const char*  r = NULL;
+    const char*  o = NULL;
+    FT_Int       s = -1;
+
+
+    if ( FT_Get_CID_Is_Internally_CID_Keyed( face, &is_cid ) )
+      return;
+
+    if ( !is_cid )
+      return;
+
+    if ( FT_Get_CID_Registry_Ordering_Supplement( face, &r, &o, &s ) )
+      return;
+
+    printf( "\n" );
+    printf( "/CIDSystemInfo dictionary\n" );
+
+    if ( r )
+      printf( "%s%s\n", Name_Field( "Registry" ), r );
+
+    if ( o )
+      printf( "%s%s\n", Name_Field( "Ordering" ), o );
+
+    printf( "%s%d\n", Name_Field( "Supplement" ), s );
+
+    if ( coverage > 0 )
+      Print_CIDs( face );
   }
 
 
@@ -1349,6 +1476,11 @@
         printf( "\n" );
         Print_Charmaps( face );
       }
+
+      /* FT_IS_CID_KEYED() does not catch an OpenType/CFF,
+       * let Print_ROS_From_Face() catch various cases.
+       */
+      Print_ROS_From_Face( face );
 
       if ( FT_HAS_MULTIPLE_MASTERS( face ) )
       {
