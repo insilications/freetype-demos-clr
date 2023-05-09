@@ -41,6 +41,7 @@ $ else
 $   write optf "[-.freetype2.lib]freetype.olb/lib"
 $ endif
 $ gosub check_create_vmslib
+$ write optf "sys$library:libbz2.olb/lib"
 $ write optf "sys$library:libpng.olb/lib"
 $ write optf "sys$library:libz.olb/lib"
 $ write optf "sys$share:decw$xlibshr.exe/share"
