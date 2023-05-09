@@ -167,7 +167,7 @@ grDevice  gr_beos_device =
   init_device,
   done_device,
 
-  (grDeviceInitSurfaceFunc) Window::init_surface,
+  Window::init_surface,
 
   0,
   0

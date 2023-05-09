@@ -965,9 +965,10 @@
 
   /* close a given window */
   static void
-  gr_x11_surface_done( grX11Surface*  surface )
+  gr_x11_surface_done( grSurface*  baseSurface )
   {
-    Display*  display = surface->display;
+    grX11Surface*  surface = (grX11Surface*)baseSurface;
+    Display*       display = surface->display;
 
 
     if ( display )
@@ -992,13 +993,14 @@
 
 
   static void
-  gr_x11_surface_refresh_rect( grX11Surface*  surface,
-                               int            x,
-                               int            y,
-                               int            w,
-                               int            h )
+  gr_x11_surface_refresh_rect( grSurface*  baseSurface,
+                               int         x,
+                               int         y,
+                               int         w,
+                               int         h )
   {
-    grX11Blitter  blit;
+    grX11Surface*  surface = (grX11Surface*)baseSurface;
+    grX11Blitter   blit;
 
 
     if ( surface->convert                    &&
@@ -1015,17 +1017,21 @@
 
 
   static void
-  gr_x11_surface_set_title( grX11Surface*  surface,
-                            const char*    title )
+  gr_x11_surface_set_title( grSurface*   baseSurface,
+                            const char*  title )
   {
+    grX11Surface*  surface = (grX11Surface*)baseSurface;
+
+
     XStoreName( surface->display, surface->win, title );
   }
 
 
   static int
-  gr_x11_surface_set_icon( grX11Surface*  surface,
-                           grBitmap*      icon )
+  gr_x11_surface_set_icon( grSurface*  baseSurface,
+                           grBitmap*   icon )
   {
+    grX11Surface*         surface = (grX11Surface*)baseSurface;
     const unsigned char*  s = (const unsigned char*)"\x80\x40\x20\x10";
     unsigned long*        buffer;
     unsigned long*        dst;
@@ -1151,17 +1157,18 @@
 
 
   static int
-  gr_x11_surface_listen_event( grX11Surface*  surface,
-                               int            event_mask,
-                               grEvent*       grevent )
+  gr_x11_surface_listen_event( grSurface*  baseSurface,
+                               int         event_mask,
+                               grEvent*    grevent )
   {
-    Display*      display = surface->display;
-    XEvent        x_event;
-    XExposeEvent  exposed;
-    KeySym        key;
+    grX11Surface*  surface = (grX11Surface*)baseSurface;
+    Display*       display = surface->display;
+    XEvent         x_event;
+    XExposeEvent   exposed;
+    KeySym         key;
 
-    int           num;
-    grKey         grkey;
+    int            num;
+    grKey          grkey;
 
     /* XXX: for now, ignore the event mask, and only exit when */
     /*      a key is pressed                                   */
@@ -1289,11 +1296,11 @@
 
 
   static int
-  gr_x11_surface_init( grX11Surface*  surface,
-                       grBitmap*      bitmap )
+  gr_x11_surface_init( grSurface*  baseSurface,
+                       grBitmap*   bitmap )
   {
-    Display*            display;
-
+    grX11Surface*  surface = (grX11Surface*)baseSurface;
+    Display*       display;
 
     surface->key_number = 0;
     surface->key_cursor = 0;
@@ -1447,11 +1454,11 @@
                        (unsigned char *)&pid, 1 );
     }
 
-    surface->root.done         = (grDoneSurfaceFunc)gr_x11_surface_done;
-    surface->root.refresh_rect = (grRefreshRectFunc)gr_x11_surface_refresh_rect;
-    surface->root.set_title    = (grSetTitleFunc)   gr_x11_surface_set_title;
-    surface->root.set_icon     = (grSetIconFunc)    gr_x11_surface_set_icon;
-    surface->root.listen_event = (grListenEventFunc)gr_x11_surface_listen_event;
+    surface->root.done         = gr_x11_surface_done;
+    surface->root.refresh_rect = gr_x11_surface_refresh_rect;
+    surface->root.set_title    = gr_x11_surface_set_title;
+    surface->root.set_icon     = gr_x11_surface_set_icon;
+    surface->root.listen_event = gr_x11_surface_listen_event;
 
     return 1;
   }
@@ -1465,7 +1472,7 @@
     gr_x11_device_init,
     gr_x11_device_done,
 
-    (grDeviceInitSurfaceFunc) gr_x11_surface_init,
+    gr_x11_surface_init,
 
     0,
     0

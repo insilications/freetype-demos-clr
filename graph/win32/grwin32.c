@@ -110,8 +110,11 @@
 
 /* destroys the surface*/
 static void
-gr_win32_surface_done( grWin32Surface*  surface )
+gr_win32_surface_done( grSurface*  baseSurface )
 {
+  grWin32Surface*  surface = (grWin32Surface*)baseSurface;
+
+
   /* The graphical window has perhaps already destroyed itself */
   if ( surface->window )
   {
@@ -134,15 +137,17 @@ gr_win32_surface_done( grWin32Surface*  surface )
 
 static void
 gr_win32_surface_refresh_rectangle(
-         grWin32Surface*  surface,
-         int              x,
-         int              y,
-         int              w,
-         int              h )
+         grSurface*  baseSurface,
+         int         x,
+         int         y,
+         int         w,
+         int         h )
 {
-  int        delta;
-  RECT       rect;
-  grBitmap*  bitmap = &surface->root.bitmap;
+  grWin32Surface*  surface = (grWin32Surface*)baseSurface;
+  int              delta;
+  RECT             rect;
+  grBitmap*        bitmap = &surface->root.bitmap;
+
 
   LOG(( "gr_win32_surface_refresh_rectangle: ( %p, %d, %d, %d, %d )\n",
         surface->root.bitmap.buffer, x, y, w, h ));
@@ -234,21 +239,25 @@ gr_win32_surface_refresh_rectangle(
 
 
 static void
-gr_win32_surface_set_title( grWin32Surface*  surface,
-                            const char*      title )
+gr_win32_surface_set_title( grSurface*   baseSurface,
+                            const char*  title )
 {
+  grWin32Surface*  surface = (grWin32Surface*)baseSurface;
+
+
   SetWindowText( surface->window, title );
 }
 
 
 static int
-gr_win32_surface_set_icon( grWin32Surface*  surface,
-                           grBitmap*        icon )
+gr_win32_surface_set_icon( grSurface*  baseSurface,
+                           grBitmap*   icon )
 {
-  int     s[] = { GetSystemMetrics( SM_CYSMICON ),
-                  GetSystemMetrics( SM_CYICON ) };
-  WPARAM  wParam;
-  HICON   hIcon;
+  grWin32Surface*  surface = (grWin32Surface*)baseSurface;
+  int              s[] = { GetSystemMetrics( SM_CYSMICON ),
+                           GetSystemMetrics( SM_CYICON ) };
+  WPARAM           wParam;
+  HICON            hIcon;
 
   if ( !icon )
     return s[1];
@@ -330,12 +339,13 @@ gr_win32_surface_resize( grWin32Surface*  surface,
   return 1;
 }
 
-static void
-gr_win32_surface_listen_event( grWin32Surface*  surface,
-                               int              event_mask,
-                               grEvent*         grevent )
+static int
+gr_win32_surface_listen_event( grSurface*  baseSurface,
+                               int         event_mask,
+                               grEvent*    grevent )
 {
-  MSG     msg;
+  grWin32Surface*  surface = (grWin32Surface*)baseSurface;
+  MSG              msg;
 
   event_mask=event_mask;  /* unused parameter */
 
@@ -359,7 +369,7 @@ gr_win32_surface_listen_event( grWin32Surface*  surface,
           grevent->type  = gr_event_resize;
           grevent->x     = width;
           grevent->y     = height;
-          return;
+          return 1;
         }
       }
       break;
@@ -373,11 +383,13 @@ gr_win32_surface_listen_event( grWin32Surface*  surface,
                                     ? "KeyPress: Char = '%c'\n"
                                     : "KeyPress: Char = <%02x>\n",
               msg.wParam ));
-        return;
+        return 1;
       }
       break;
     }
   }
+
+  return 0;
 }
 
 
@@ -427,10 +439,11 @@ DWORD WINAPI Window_ThreadProc( LPVOID lpParameter )
 
 
 static int
-gr_win32_surface_init( grWin32Surface*  surface,
-                       grBitmap*        bitmap )
+gr_win32_surface_init( grSurface*  baseSurface,
+                       grBitmap*   bitmap )
 {
-  MSG  msg;
+  grWin32Surface*  surface = (grWin32Surface*)baseSurface;
+  MSG              msg;
 
 
   /* Set default mode */
@@ -546,11 +559,11 @@ gr_win32_surface_init( grWin32Surface*  surface,
     goto Fail;
 
   /* wrap up */
-  surface->root.done         = (grDoneSurfaceFunc) gr_win32_surface_done;
-  surface->root.refresh_rect = (grRefreshRectFunc) gr_win32_surface_refresh_rectangle;
-  surface->root.set_title    = (grSetTitleFunc)    gr_win32_surface_set_title;
-  surface->root.set_icon     = (grSetIconFunc)     gr_win32_surface_set_icon;
-  surface->root.listen_event = (grListenEventFunc) gr_win32_surface_listen_event;
+  surface->root.done         = gr_win32_surface_done;
+  surface->root.refresh_rect = gr_win32_surface_refresh_rectangle;
+  surface->root.set_title    = gr_win32_surface_set_title;
+  surface->root.set_icon     = gr_win32_surface_set_icon;
+  surface->root.listen_event = gr_win32_surface_listen_event;
 
   LOG(( "Surface initialized: %dx%dx%d\n",
         surface->root.bitmap.width, surface->root.bitmap.rows,
@@ -559,7 +572,7 @@ gr_win32_surface_init( grWin32Surface*  surface,
   return 1;
 
 Fail:
-  gr_win32_surface_done( surface );
+  gr_win32_surface_done( &surface->root );
   return 0;
 }
 
@@ -696,7 +709,7 @@ LRESULT CALLBACK Message_Process( HWND handle, UINT mess,
     gr_win32_device_init,
     gr_win32_device_done,
 
-    (grDeviceInitSurfaceFunc) gr_win32_surface_init,
+    gr_win32_surface_init,
 
     0,
     0
