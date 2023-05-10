@@ -467,8 +467,9 @@
   icon_span( int              y,
              int              count,
              const FT_Span*   spans,
-             grBitmap*        icon )
+             void*            user )
   {
+    grBitmap*       icon = (grBitmap*)user;
     FT_UInt32*      dst_line;
     FT_UInt32*      dst;
     FT_UInt32       color = 0xFF7F00;
@@ -508,7 +509,7 @@
 
     FT_Raster_Params  params = { NULL, NULL,
                                  FT_RASTER_FLAG_AA | FT_RASTER_FLAG_DIRECT,
-                                 (FT_SpanFunc)icon_span, NULL, NULL, NULL,
+                                 icon_span, NULL, NULL, NULL,
                                  &icon, { 0, 0, 0, 0 } };
 
 
