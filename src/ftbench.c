@@ -172,7 +172,7 @@
 
 
   /*
-   * Dummy face requester (the face object is already loaded)
+   * Face requester for cache testing
    */
 
   static FT_Error
@@ -183,10 +183,9 @@
   {
     FT_UNUSED( face_id );
     FT_UNUSED( library );
+    FT_UNUSED( request_data );
 
-    *aface = (FT_Face)request_data;
-
-    return FT_Err_Ok;
+    return get_face( aface );
   }
 
 
@@ -1365,7 +1364,7 @@
                      0,
                      max_bytes,
                      face_requester,
-                     face,
+                     NULL,
                      &cache_man );
 
     font_type.face_id = (FTC_FaceID)1;
