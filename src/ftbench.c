@@ -443,10 +443,9 @@
 
     FOREACH( i )
     {
-      if ( FT_Load_Glyph( face, (FT_UInt)i, load_flags ) )
-        continue;
-
-      if ( FT_Get_Glyph( face->glyph, &glyph ) )
+      if ( FT_Load_Glyph( face, (FT_UInt)i, load_flags )  ||
+           face->glyph->format != FT_GLYPH_FORMAT_OUTLINE ||
+           FT_Get_Glyph( face->glyph, &glyph )            )
         continue;
 
       TIMER_START( timer );
