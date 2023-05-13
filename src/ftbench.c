@@ -268,13 +268,6 @@
 
     if ( test->cache_first )
     {
-      if ( !cache_man )
-      {
-        printf( "  %-25s no cache manager\n", test->title );
-
-        return;
-      }
-
       TIMER_RESET( &timer );
       test->bench( &timer, face, test->user_data );
     }
@@ -587,12 +580,6 @@
     FT_UNUSED( face );
 
 
-    if ( !cmap_cache )
-    {
-      if ( FTC_CMapCache_New( cache_man, &cmap_cache ) )
-        return 0;
-    }
-
     TIMER_START( timer );
 
     for ( i = 0; i < charset->size; i++ )
@@ -622,12 +609,6 @@
     FT_UNUSED( face );
     FT_UNUSED( user_data );
 
-
-    if ( !image_cache )
-    {
-      if ( FTC_ImageCache_New( cache_man, &image_cache ) )
-        return 0;
-    }
 
     TIMER_START( timer );
 
@@ -659,12 +640,6 @@
     FT_UNUSED( face );
     FT_UNUSED( user_data );
 
-
-    if ( !sbit_cache )
-    {
-      if ( FTC_SBitCache_New( cache_man, &sbit_cache ) )
-        return 0;
-    }
 
     TIMER_START( timer );
 
@@ -1060,7 +1035,6 @@
     unsigned int   size           = FACE_SIZE;
     int            max_iter       = 0;
     double         max_time       = BENCH_TIME;
-    int            compare_cached = 0;
     int            j;
 
     unsigned int  versions[2] = { TT_INTERPRETER_VERSION_35,
@@ -1144,7 +1118,11 @@
         break;
 
       case 'C':
-        compare_cached = 1;
+        FTC_Manager_New( lib,
+                         0, 0, max_bytes,
+                         face_requester,
+                         NULL,
+                         &cache_man );
         break;
 
       case 'c':
@@ -1358,19 +1336,13 @@
       }
     }
 
-    if ( FTC_Manager_New( lib,
-                          0,
-                          0,
-                          max_bytes,
-                          face_requester,
-                          NULL,
-                          &cache_man ) )
-      compare_cached = 0;
-
-    font_type.face_id = (FTC_FaceID)1;
-    font_type.width   = size;
-    font_type.height  = size;
-    font_type.flags   = load_flags;
+    if ( cache_man )
+    {
+      font_type.face_id = (FTC_FaceID)1;
+      font_type.width   = size;
+      font_type.height  = size;
+      font_type.flags   = load_flags;
+    }
 
     printf( "\n"
             "font preloading into memory: %s\n"
@@ -1411,20 +1383,26 @@
         test.bench = test_load;
         benchmark( face, &test, max_iter, max_time );
 
-        if ( compare_cached )
+        if ( cache_man )
         {
           test.cache_first = 1;
 
-          test.title = "Load (image cached)";
-          test.bench = test_image_cache;
-          benchmark( face, &test, max_iter, max_time );
-
-          test.title = "Load (sbit cached)";
-          test.bench = test_sbit_cache;
-          if ( size )
+          if ( !FTC_ImageCache_New( cache_man, &image_cache ) )
+          {
+            test.title = "Load (image cached)";
+            test.bench = test_image_cache;
             benchmark( face, &test, max_iter, max_time );
-          else
-            printf( "  %-25s disabled (size = 0)\n", test.title );
+          }
+
+          if ( !FTC_SBitCache_New( cache_man, &sbit_cache ) )
+          {
+            test.title = "Load (sbit cached)";
+            test.bench = test_sbit_cache;
+            if ( size )
+              benchmark( face, &test, max_iter, max_time );
+            else
+              printf( "  %-25s disabled (size = 0)\n", test.title );
+          }
         }
         break;
 
@@ -1475,7 +1453,7 @@
           FT_Matrix  rot30 = { 0xDDB4, -0x8000, 0x8000, 0xDDB4 };
 
 
-          /* rotate outlines by 30 degrees so that CBox and BBox are different */
+          /* rotate outlines by 30 degrees so that CBox and BBox differ */
           FT_Set_Transform( face, &rot30, NULL );
           benchmark( face, &test, max_iter, max_time );
           FT_Set_Transform( face, NULL, NULL );
@@ -1498,7 +1476,8 @@
 
             benchmark( face, &test, max_iter, max_time );
 
-            if ( compare_cached )
+            if ( cache_man                                    &&
+                 !FTC_CMapCache_New( cache_man, &cmap_cache ) )
             {
               test.cache_first = 1;
 
