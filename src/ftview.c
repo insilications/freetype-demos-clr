@@ -868,25 +868,25 @@
     grWriteln( "c           toggle coloured bitmaps     x, X        adjust horizontal       " );
     grWriteln( "z           toggle colour-layered                    emboldening (in mode 2)" );
     grWriteln( "              glyphs                    y, Y        adjust vertical         " );
-    grWriteln( "                                                     emboldening (in mode 2)" );
-    grWriteln( "K           toggle cache modes          s, S        adjust slanting         " );
-    grWriteln( "                                                     (in mode 2)            " );
-    grWriteln( "p, n        previous/next font          r, R        adjust stroking radius  " );
-    grWriteln( "                                                     (in mode 3)            " );
-    grWriteln( "Up, Down    adjust size by 1 unit                                           " );
-    grWriteln( "PgUp, PgDn  adjust size by 10 units     L           cycle through           " );
-    grWriteln( "                                                     LCD filtering          " );
-    grWriteln( "Left, Right adjust index by 1           [, ]        select custom LCD       " );
-    grWriteln( "F7, F8      adjust index by 16                        filter weight         " );
-    grWriteln( "F9, F10     adjust index by 256                       (if custom filtering) " );
-    grWriteln( "F11, F12    adjust index by 4096        -, +(=)     adjust selected custom  " );
-    grWriteln( "                                                     LCD filter weight      " );
-    grWriteln( "h           toggle hinting                                                  " );
-    grWriteln( "H           cycle through hinting       g, v        adjust gamma value      " );
-    grWriteln( "             engines (if available)                                         " );
-    grWriteln( "f           toggle forced auto-         Tab         cycle through charmaps  " );
-    grWriteln( "             hinting (if hinting)                                           " );
-    grWriteln( "                                        P           print PNG file          " );
+    grWriteln( "Z           toggle SVG glyphs                        emboldening (in mode 2)" );
+    grWriteln( "                                        s, S        adjust slanting         " );
+    grWriteln( "K           toggle cache modes                       (in mode 2)            " );
+    grWriteln( "                                        r, R        adjust stroking radius  " );
+    grWriteln( "p, n        previous/next font                       (in mode 3)            " );
+    grWriteln( "                                                                            " );
+    grWriteln( "Up, Down    adjust size by 1 unit       L           cycle through           " );
+    grWriteln( "PgUp, PgDn  adjust size by 10 units                  LCD filtering          " );
+    grWriteln( "                                        [, ]        select custom LCD       " );
+    grWriteln( "Left, Right adjust index by 1                         filter weight         " );
+    grWriteln( "F7, F8      adjust index by 16                        (if custom filtering) " );
+    grWriteln( "F9, F10     adjust index by 256         -, +(=)     adjust selected custom  " );
+    grWriteln( "F11, F12    adjust index by 4096                     LCD filter weight      " );
+    grWriteln( "                                                                            " );
+    grWriteln( "h           toggle hinting              g, v        adjust gamma value      " );
+    grWriteln( "H           cycle through hinting                                           " );
+    grWriteln( "             engines (if available)     Tab         cycle through charmaps  " );
+    grWriteln( "f           toggle forced auto-                                             " );
+    grWriteln( "             hinting (if hinting)       P           print PNG file          " );
     grWriteln( "                                        q, ESC      quit ftview             " );
     /*          |----------------------------------|    |----------------------------------| */
     grLn();
@@ -1189,6 +1189,11 @@
 
     case grKEY( 'z' ):
       handle->use_layers = !handle->use_layers;
+      FTDemo_Update_Current_Flags( handle );
+      return 1;
+
+    case grKEY( 'Z' ):
+      handle->use_svg = !handle->use_svg;
       FTDemo_Update_Current_Flags( handle );
       return 1;
 
@@ -1569,6 +1574,12 @@
       /* color palette */
       snprintf( buf, sizeof ( buf ), "  palette: %d",
                 handle->current_font->palette_index );
+      grWriteCellString( display->bitmap, 0, (line++) * HEADER_HEIGHT,
+                         buf, display->fore_color );
+
+      /* SVG glyphs */
+      snprintf( buf, sizeof ( buf ), "  SVG: %s",
+                handle->use_svg ? "on" : "off" );
       grWriteCellString( display->bitmap, 0, (line++) * HEADER_HEIGHT,
                          buf, display->fore_color );
     }

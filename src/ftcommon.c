@@ -389,6 +389,7 @@
     handle->use_sbits  = 1;
     handle->use_color  = 1;
     handle->use_layers = 1;
+    handle->use_svg    = 1;
     handle->autohint   = 0;
     handle->lcd_mode   = LCD_MODE_AA;
 
@@ -887,6 +888,9 @@
 
     if ( handle->use_color )
       flags |= FT_LOAD_COLOR;
+
+    if ( !handle->use_svg )
+      flags |= FT_LOAD_NO_SVG;
 
     if ( handle->hinted )
     {

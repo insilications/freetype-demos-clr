@@ -218,6 +218,7 @@
     int             use_sbits;         /* do we use embedded bitmaps?     */
     int             use_color;         /* do we use coloured glyphs?      */
     int             use_layers;        /* do we use color-layered glyphs? */
+    int             use_svg;           /* do we use SVG glyphs?           */
     int             autohint;          /* force auto-hinting              */
     int             lcd_mode;          /* mono, aa, light, vrgb, ...      */
     int             preload;           /* force font file preloading      */
