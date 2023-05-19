@@ -29,10 +29,13 @@
 #include <freetype/ftdriver.h>
 #include <freetype/ftglyph.h>
 #include <freetype/ftlcdfil.h>
+#include <freetype/ftmm.h>
 #include <freetype/ftmodapi.h>
 #include <freetype/ftoutln.h>
 #include <freetype/ftstroke.h>
 #include <freetype/ftsynth.h>
+
+#define MAX_MM_AXES 16
 
 #ifdef UNIX
 #include <unistd.h>
@@ -105,6 +108,11 @@
   static FTC_SBitCache     sbit_cache;
   static FTC_ImageTypeRec  font_type;
 
+  static FT_MM_Var*    multimaster   = NULL;
+  static FT_Fixed      design_pos   [MAX_MM_AXES];
+  static FT_Fixed      requested_pos[MAX_MM_AXES];
+  static unsigned int  requested_cnt = 0;
+  static unsigned int  used_num_axes = 0;
 
   enum {
     FT_BENCH_LOAD_GLYPH,
@@ -925,6 +933,49 @@
     if ( error )
       fprintf( stderr, "couldn't load font resource\n");
 
+    /* Set up MM_Var. */
+    if ( requested_cnt != 0 )
+    {
+      unsigned int  n;
+
+
+      error = FT_Get_MM_Var( *face, &multimaster );
+      if ( error )
+      {
+        fprintf( stderr, "couldn't load MultiMaster info\n" );
+        return error;
+      }
+
+      used_num_axes = multimaster->num_axis;
+
+      for ( n = 0; n < used_num_axes; n++ )
+      {
+        FT_Var_Axis*  a = multimaster->axis + n;
+
+
+        design_pos[n] = n < requested_cnt ? requested_pos[n] : a->def;
+
+        if ( design_pos[n] < a->minimum )
+          design_pos[n] = a->minimum;
+        else if ( design_pos[n] > a->maximum )
+          design_pos[n] = a->maximum;
+
+        if ( !FT_IS_SFNT( *face ) )
+          design_pos[n] = FT_RoundFix( design_pos[n] );
+      }
+
+      error = FT_Set_Var_Design_Coordinates( *face,
+                                             used_num_axes,
+                                             design_pos );
+      if ( error )
+      {
+        fprintf( stderr, "couldn't set design coordinates\n" );
+        return error;
+      }
+
+      FT_Done_MM_Var( lib, multimaster );
+    }
+
     return error;
   }
 
@@ -1023,6 +1074,21 @@
 #define TEST( x ) ( !test_string || strchr( test_string, (x) ) )
 
 
+  static void
+  parse_design_coords( char  *s )
+  {
+    for ( requested_cnt = 0;
+          requested_cnt < MAX_MM_AXES && *s;
+          requested_cnt++ )
+    {
+      requested_pos[requested_cnt] = (FT_Fixed)( strtod( s, &s ) * 65536.0 );
+
+      while ( *s==' ' )
+        ++s;
+    }
+  }
+
+
   int
   main( int     argc,
         char**  argv )
@@ -1106,13 +1172,17 @@
       int  opt;
 
 
-      opt = getopt( argc, argv, "b:Cc:e:f:H:I:i:l:m:pr:s:t:v" );
+      opt = getopt( argc, argv, "a:b:Cc:e:f:H:I:i:l:m:pr:s:t:v" );
 
       if ( opt == -1 )
         break;
 
       switch ( opt )
       {
+      case 'a':
+        parse_design_coords( optarg );
+        break;
+
       case 'b':
         test_string = optarg;
         break;
