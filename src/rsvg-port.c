@@ -306,7 +306,26 @@
     if ( start_glyph_id == end_glyph_id )
     {
       /* Render the whole document to the recording surface. */
-      ret = rsvg_handle_render_cairo ( handle, rec_cr );
+#if LIBRSVG_CHECK_VERSION( 2, 52, 0 )
+      {
+        RsvgRectangle  viewport =
+        {
+          .x = 0,
+          .y = 0,
+          .width  = dimension_svg.width,
+          .height = dimension_svg.height,
+        };
+
+
+        ret = rsvg_handle_render_document( handle,
+                                           rec_cr,
+                                           &viewport,
+                                           NULL );
+      }
+#else
+      ret = rsvg_handle_render_cairo( handle, rec_cr );
+#endif
+
       if ( ret == FALSE )
       {
         error = FT_Err_Invalid_SVG_Document;
@@ -320,7 +339,28 @@
 
       /* Render only the element with its ID equal to `glyph<ID>`. */
       sprintf( str + 6, "%u", slot->glyph_index );
+
+#if LIBRSVG_CHECK_VERSION( 2, 52, 0 )
+      {
+        RsvgRectangle  viewport =
+        {
+          .x = 0,
+          .y = 0,
+          .width  = dimension_svg.width,
+          .height = dimension_svg.height,
+        };
+
+
+        ret = rsvg_handle_render_layer( handle,
+                                        rec_cr,
+                                        str,
+                                        &viewport,
+                                        NULL );
+      }
+#else
       ret = rsvg_handle_render_cairo_sub( handle, rec_cr, str );
+#endif
+
       if ( ret == FALSE )
       {
         error = FT_Err_Invalid_SVG_Document;
