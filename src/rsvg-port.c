@@ -241,12 +241,29 @@
     {
       dimension_svg.width  = (int)out_width.length; /* XXX rounding? */
       dimension_svg.height = (int)out_height.length;
+
+      /*
+       * librsvg 2.53+ behavior, on SVG doc without explicit width/height.
+       * See `rsvg_handle_get_intrinsic_dimensions` section in
+       * the `librsvg/rsvg.h` header file.
+       */
+      if ( out_width.length  == 1 &&
+           out_height.length == 1 )
+      {
+        dimension_svg.width  = units_per_EM;
+        dimension_svg.height = units_per_EM;
+      }
     }
     else
     {
-      /* If neither `ViewBox` nor `width`/`height` are present, the */
-      /* `units_per_EM` in SVG coordinates must be the same as      */
-      /* `units_per_EM` of the TTF/CFF outlines.                    */
+      /*
+       * If neither `ViewBox` nor `width`/`height` are present, the
+       * `units_per_EM` in SVG coordinates must be the same as
+       * `units_per_EM` of the TTF/CFF outlines.
+       *
+       * librsvg up to 2.52 behavior, on SVG doc without explicit
+       * width/height.
+       */
       dimension_svg.width  = units_per_EM;
       dimension_svg.height = units_per_EM;
     }
