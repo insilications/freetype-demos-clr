@@ -329,8 +329,8 @@
         {
           .x = 0,
           .y = 0,
-          .width  = dimension_svg.width,
-          .height = dimension_svg.height,
+          .width  = (double)dimension_svg.width,
+          .height = (double)dimension_svg.height,
         };
 
 
@@ -363,8 +363,8 @@
         {
           .x = 0,
           .y = 0,
-          .width  = dimension_svg.width,
-          .height = dimension_svg.height,
+          .width  = (double)dimension_svg.width,
+          .height = (double)dimension_svg.height,
         };
 
 
