@@ -194,6 +194,9 @@
     float vertBearingX, vertBearingY;
     float tmpf;
 
+    char  *id;
+    char  str[32];
+
 
     /* If `cache` is `TRUE` we store calculations in the actual port */
     /* state variable, otherwise we just create a dummy variable and */
@@ -320,69 +323,43 @@
     /* If the document contains only one glyph, `start_glyph_id` and */
     /* `end_glyph_id` have the same value.  Otherwise `end_glyph_id` */
     /* is larger.                                                    */
-    if ( start_glyph_id == end_glyph_id )
+    if ( start_glyph_id < end_glyph_id )
     {
-      /* Render the whole document to the recording surface. */
-#if LIBRSVG_CHECK_VERSION( 2, 52, 0 )
-      {
-        RsvgRectangle  viewport =
-        {
-          .x = 0,
-          .y = 0,
-          .width  = (double)dimension_svg.width,
-          .height = (double)dimension_svg.height,
-        };
-
-
-        ret = rsvg_handle_render_document( handle,
-                                           rec_cr,
-                                           &viewport,
-                                           NULL );
-      }
-#else
-      ret = rsvg_handle_render_cairo( handle, rec_cr );
-#endif
-
-      if ( ret == FALSE )
-      {
-        error = FT_Err_Invalid_SVG_Document;
-        goto CleanCairo;
-      }
-    }
-    else if ( start_glyph_id < end_glyph_id )
-    {
-      char  str[32] = "#glyph";
-
-
       /* Render only the element with its ID equal to `glyph<ID>`. */
-      sprintf( str + 6, "%u", slot->glyph_index );
+      sprintf( str, "#glyph%u", slot->glyph_index );
+      id = str;
+    }
+    else
+    {
+      /* NULL = Render the whole document */
+      id = NULL;
+    }
 
 #if LIBRSVG_CHECK_VERSION( 2, 52, 0 )
+    {
+      RsvgRectangle  viewport =
       {
-        RsvgRectangle  viewport =
-        {
-          .x = 0,
-          .y = 0,
-          .width  = (double)dimension_svg.width,
-          .height = (double)dimension_svg.height,
-        };
+        .x = 0,
+        .y = 0,
+        .width  = (double)dimension_svg.width,
+        .height = (double)dimension_svg.height,
+      };
 
 
-        ret = rsvg_handle_render_layer( handle,
-                                        rec_cr,
-                                        str,
-                                        &viewport,
-                                        NULL );
-      }
+      ret = rsvg_handle_render_layer( handle,
+                                      rec_cr,
+                                      id,
+                                      &viewport,
+                                      NULL );
+    }
 #else
-      ret = rsvg_handle_render_cairo_sub( handle, rec_cr, str );
+    ret = rsvg_handle_render_cairo_sub( handle, rec_cr, id );
 #endif
 
-      if ( ret == FALSE )
-      {
-        error = FT_Err_Invalid_SVG_Document;
-        goto CleanCairo;
-      }
+    if ( ret == FALSE )
+    {
+      error = FT_Err_Invalid_SVG_Document;
+      goto CleanCairo;
     }
 
     /* Get the bounding box of the drawing. */
