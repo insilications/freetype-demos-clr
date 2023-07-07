@@ -1978,8 +1978,10 @@
 
 
   static FT_Error
-  RunIns( TT_ExecContext  exc )
+  RunIns( void*  exec )
   {
+    TT_ExecContext  exc = (TT_ExecContext)exec;
+
     FT_Int  key;
 
     FT_Bool  really_leave;
@@ -3049,7 +3051,7 @@
 
     FT_Set_Debug_Hook( library,
                        FT_DEBUG_HOOK_TRUETYPE,
-                       (FT_DebugHook_Func)RunIns );
+                       RunIns );
 
     printf( "%s\n"
             "press key `h' or `?' for help\n"
