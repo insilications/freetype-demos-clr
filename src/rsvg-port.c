@@ -415,7 +415,7 @@
     /* If a render call is to follow, just destroy the context for the */
     /* recording surface since no more drawing will be done on it.     */
     /* However, keep the surface itself for use by the render hook.    */
-    if ( cache == TRUE )
+    if ( cache )
     {
       cairo_destroy( rec_cr );
       goto CleanLibrsvg;
