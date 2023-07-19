@@ -71,6 +71,7 @@ FaceID::operator<(const FaceID& other) const
 // font, face, and named instance indices.  Getting a key from a value is
 // slow, but this must be done only once, since `faceRequester` is only
 // called if the font is not yet in the cache.
+// Note: Instance indices start from 1, and 0 is used to indicate no MM/GX handling.
 
 FT_Error
 faceRequester(FTC_FaceID ftcFaceID,
@@ -101,8 +102,7 @@ faceRequester(FTC_FaceID ftcFaceID,
   QString font = engine->fontFileManager_[faceID.fontIndex].filePath();
   long faceIndex = faceID.faceIndex;
 
-  if (faceID.namedInstanceIndex > 0)
-    faceIndex += faceID.namedInstanceIndex << 16;
+  faceIndex += (faceID.namedInstanceIndex) << 16;
 
   *faceP = NULL;
   return FT_New_Face(library,
@@ -227,8 +227,8 @@ int
 Engine::numberOfNamedInstances(int fontIndex,
                                long faceIndex)
 {
-  // We return `n` named instances plus one;
-  // instance index 0 represents a face without a named instance selected.
+  // With the new `FT_Get_Default_Named_Instance` func, we no longer to return
+  // one more entries.
   int numNamedInstances = -1;
   if (fontIndex < 0)
     return -1;
@@ -237,7 +237,7 @@ Engine::numberOfNamedInstances(int fontIndex,
            [&](FT_Face face)
            {
              numNamedInstances
-               = static_cast<int>((face->style_flags >> 16) + 1);
+               = static_cast<int>((face->style_flags >> 16));
            });
 
   return numNamedInstances;
@@ -261,6 +261,25 @@ Engine::namedInstanceName(int fontIndex,
                       .arg(face->style_name);
            });
   return name;
+}
+
+
+unsigned
+Engine::defaultNamedInstanceIndex(int fontIndex,
+                                  int faceIndex)
+{
+  if (fontIndex < 0)
+    return 0;
+  unsigned ret = 0;
+  withFace(FaceID(fontIndex, faceIndex, 0),
+           [&](FT_Face face)
+           {
+             if (FT_Get_Default_Named_Instance(face, &ret) != 0)
+             {
+               // XXX error handling?
+             }
+           });
+  return ret;
 }
 
 

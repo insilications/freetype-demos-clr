@@ -145,6 +145,8 @@ public:
   QString namedInstanceName(int fontIndex,
                             long faceIndex,
                             int index);
+  unsigned defaultNamedInstanceIndex(int fontIndex,
+                                int faceIndex);
 
   bool currentFontTricky();
   bool currentFontBitmapOnly();

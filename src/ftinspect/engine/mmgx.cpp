@@ -39,8 +39,10 @@ MMGXAxisInfo::get(Engine* engine,
   }
 
   FT_Var_Named_Style* namedInstance = nullptr;
+  // named instance index starts from 1, but we need to reference using a
+  // 0-based index.
   if (namedInstanceIndex > 0 && namedInstanceIndex <= mm->num_namedstyles)
-    namedInstance = &mm->namedstyle[namedInstanceIndex - 1]; // 0 means default
+    namedInstance = &mm->namedstyle[namedInstanceIndex - 1];
 
   infos.resize(mm->num_axis);
 

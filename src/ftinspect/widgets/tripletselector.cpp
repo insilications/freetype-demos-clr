@@ -162,7 +162,7 @@ TripletSelector::repopulateNamedInstances(bool fontSwitched)
   newFaces.reserve(newSize);
   for (long i = 0; i < newSize; i++)
   {
-    newFaces.emplace_back(engine_->namedInstanceName(fontIndex, faceIndex, i));
+    newFaces.emplace_back(engine_->namedInstanceName(fontIndex, faceIndex, i + 1));
     if (!needToRecreate && newFaces[i] != niComboBox_->itemData(i))
       needToRecreate = true;
   }
@@ -181,16 +181,19 @@ TripletSelector::repopulateNamedInstances(bool fontSwitched)
     QSignalBlocker blk3(niComboBox_);
     niComboBox_->clear();
 
-    for (long i = 0; i < newSize; i++)
+    // Returned index starts from 1, therefore minus 1.
+    auto defaultId = engine_->defaultNamedInstanceIndex(fontIndex, faceIndex) - 1;
+    for (unsigned i = 0; i < static_cast<unsigned>(newSize); i++)
     {
       auto& name = newFaces[i];
-      auto displayName = QString("%1: %2").arg(i).arg(name);
-      if (i == 0)
-        displayName = "* " + displayName;
+      auto displayName = QString("%1: %2").arg(i + 1).arg(name);
+      if (i == defaultId)
+        displayName = displayName + " (default)";
       niComboBox_->addItem(displayName, name);
     }
 
-    niComboBox_->setCurrentIndex(0);
+    if (defaultId >= 0 && newSize > 0)
+      niComboBox_->setCurrentIndex(static_cast<int>(defaultId));
     // Note: no signal is emitted from any combobox until this block ends.
   }
 
@@ -460,10 +463,9 @@ TripletSelector::loadTriplet()
 
   if (faceIndex < 0)
     faceIndex = 0;
-  if (instanceIndex < 0)
-    instanceIndex = 0;
-
-  engine_->loadFont(fontIndex, faceIndex, instanceIndex);
+  if (instanceIndex < 0 || niComboBox_->count() == 0)
+    instanceIndex = -1; // No instance available.
+  engine_->loadFont(fontIndex, faceIndex, instanceIndex + 1);
 
   // TODO: This may mess up with bitmap-only fonts.
   if (!engine_->fontValid())
