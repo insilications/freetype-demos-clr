@@ -46,6 +46,7 @@ public:
 
   void repaintGlyph() override;
   void reloadFont() override;
+  void relayout() override;
   void highlightGlyph(int index);
   void applySettings();
 

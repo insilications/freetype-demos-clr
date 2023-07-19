@@ -198,6 +198,8 @@ MainGUI::switchTab()
   else
     leftWidget_->setVisible(!isComparator);
 
+  tabs_[tabWidget_->currentIndex()]->relayout();
+
   reloadCurrentTabFont();
 
   if (current == continuousTab_

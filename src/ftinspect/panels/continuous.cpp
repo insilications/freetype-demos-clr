@@ -66,6 +66,13 @@ ContinuousTab::reloadFont()
 
 
 void
+ContinuousTab::relayout()
+{
+  indexSelector_->relayoutNavigation();
+}
+
+
+void
 ContinuousTab::applySettings()
 {
   auto mode

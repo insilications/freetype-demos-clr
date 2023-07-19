@@ -460,6 +460,13 @@ SingularTab::reloadFont()
 
 
 void
+SingularTab::relayout()
+{
+  indexSelector_->relayoutNavigation();
+}
+
+
+void
 SingularTab::setCurrentGlyphAndSize(int glyphIndex,
                                     double sizePoint)
 {

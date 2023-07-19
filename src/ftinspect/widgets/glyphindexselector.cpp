@@ -21,6 +21,20 @@ GlyphIndexSelector::GlyphIndexSelector(QWidget* parent)
 
 
 void
+GlyphIndexSelector::relayoutNavigation()
+{
+  auto minimumWidth = minimumSizeHint().width();
+  if (toEndButton_->isVisible())
+  {
+    if (width() < minimumWidth)
+      navigationWidget_->setVisible(false);
+  }
+  else if (navigationWidget_->minimumSizeHint().width() + minimumWidth <= width())
+    navigationWidget_->setVisible(true);
+}
+
+
+void
 GlyphIndexSelector::setMinMax(int min,
                               int max)
 {
@@ -87,15 +101,7 @@ void
 GlyphIndexSelector::resizeEvent(QResizeEvent* event)
 {
   QWidget::resizeEvent(event);
-  auto minimumWidth = minimumSizeHint().width();
-  if (toEndButton_->isVisible())
-  {
-    if (width() < minimumWidth)
-      navigationWidget_->setVisible(false);
-  }
-  else if (navigationWidget_->minimumSizeHint().width() + minimumWidth
-           <= width())
-    navigationWidget_->setVisible(true);
+  relayoutNavigation();
 }
 
 

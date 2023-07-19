@@ -16,6 +16,7 @@ public:
 
   virtual void repaintGlyph() = 0;
   virtual void reloadFont() = 0;
+  virtual void relayout() {}
 };
 
 

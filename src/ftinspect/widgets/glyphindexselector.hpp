@@ -24,6 +24,8 @@ public:
   GlyphIndexSelector(QWidget* parent);
   ~GlyphIndexSelector() override = default;
 
+  void relayoutNavigation();
+
   // Never triggers repaint!
   void setMinMax(int min,
                  int max);
