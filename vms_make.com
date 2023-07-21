@@ -9,6 +9,12 @@ $!------------------------------------------------------------------------------
 $!
 $ on error then goto err_exit
 $!
+$! Get platform
+$ vax      = f$getsyi("ARCH_NAME").eqs. "VAX"
+$ axp      = f$getsyi("ARCH_NAME").eqs. "Alpha"
+$ ia64     = f$getsyi("ARCH_NAME").eqs. "IA64"
+$ x86_64   = f$getsyi("ARCH_NAME").eqs. "x86_64"
+$!
 $! Just some general constants
 $!
 $ Make   = ""
@@ -34,16 +40,25 @@ $!
 $! Create option file
 $!
 $ open/write optf 'optfile'
-$ If f$getsyi("HW_MODEL") .gt. 1024
+$ If .not. vax
 $ Then
 $  write optf "[-.freetype2.lib]freetype2shr.exe/share"
 $ else
 $   write optf "[-.freetype2.lib]freetype.olb/lib"
 $ endif
 $ gosub check_create_vmslib
-$ write optf "sys$library:libbz2.olb/lib"
-$ write optf "sys$library:libpng.olb/lib"
-$ write optf "sys$library:libz.olb/lib"
+$!
+$!
+$! Check external libraries
+$!
+$ have_png = f$search("sys$library:libpng.olb") .nes. ""
+$ have_bz2 = f$search("sys$library:libbz2.olb") .nes. ""
+$ have_z = f$search("sys$library:libz.olb") .nes. ""
+$ have_harfbuzz = f$search("sys$library:libharfbuzz.olb") .nes. ""
+$ if ( have_harfbuzz ) then write optf "sys$library:libharfbuzz.olb/lib"
+$ if ( have_bz2 ) then write optf "sys$library:libbz2.olb/lib"
+$ if ( have_png ) then write optf "sys$library:libpng.olb/lib"
+$ if ( have_z ) then write optf "sys$library:libz.olb/lib"
 $ write optf "sys$share:decw$xlibshr.exe/share"
 $ close optf
 $!
@@ -122,7 +137,7 @@ GRAPHOBJ64 = $(OBJDIR)grobjs_64.obj,  \
 
 # C flags
 CFLAGS = $(CCOPT)$(INCLUDES)/obj=$(OBJDIR)/define=("FT2_BUILD_LIBRARY=1")\
-	/warn=disable=("MACROREDEF","MAYLOSEDATA3")
+	/warn=(noinfo,disable=("MACROREDEF","MAYLOSEDATA3"))
 
 .c.obj :
 	cc$(CFLAGS)/point=32/list=$(MMS$TARGET_NAME).lis/show=all $(MMS$SOURCE)
@@ -286,20 +301,20 @@ $(OBJDIR)gblender.obj  : $(GRAPHSRC)gblender.c
 $(OBJDIR)gblblit.obj   : $(GRAPHSRC)gblblit.c
 $(OBJDIR)grinit.obj    : $(GRAPHSRC)grinit.c
         set def $(GRAPHSRC)
-        $(CC)$(CCOPT)/include=([.x11],[])/point=32/list/show=all\
+        $(CC)$(CCOPT)/warn=noinfo/include=([.x11],[])/point=32/list/show=all\
 	/define=(DEVICE_X11,"FT2_BUILD_LIBRARY=1")/obj=[-.objs] grinit.c
 	pipe link/map/full/exec=nl: [-.objs]grinit.obj | copy sys$input nl:
 	mc sys$library:vms_auto64 grinit.map grinit.lis
-	$(CC)$(CCOPT)/include=([.x11],[])/point=64/obj=[-.objs] grinit_64.c
+	$(CC)$(CCOPT)/warn=noinfo/include=([.x11],[])/point=64/obj=[-.objs] grinit_64.c
 	delete grinit_64.c;*
         set def [-]
 $(OBJDIR)grx11.obj     : $(GRX11SRC)grx11.c
         set def $(GRX11SRC)
-        $(CC)$(CCOPT)/include=([-])/point=32/list/show=all\
+        $(CC)$(CCOPT)/warn=noinfo/include=([-])/point=32/list/show=all\
 	/define=(DEVICE_X11,"FT2_BUILD_LIBRARY=1")/obj=[--.objs] grx11.c
 	pipe link/map/full/exec=nl: [--.objs]grx11.obj | copy sys$input nl:
 	mc sys$library:vms_auto64 grx11.map grx11.lis
-	$(CC)$(CCOPT)/include=([-])/point=64/obj=[--.objs] grx11_64.c
+	$(CC)$(CCOPT)/warn=noinfo/include=([-])/point=64/obj=[--.objs] grx11_64.c
 	delete grx11_64.c;*
         set def [--]
 $(OBJDIR)grdevice.obj  : $(GRAPHSRC)grdevice.c
