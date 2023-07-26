@@ -925,7 +925,7 @@
       FT_Fixed*    coords;
       const char*  ps_name;
 
-      FT_Long              instance_count;
+      FT_UInt              instance_count;
       FT_UInt              default_named_instance;
       FT_Var_Named_Style*  named_styles;
 
@@ -957,14 +957,14 @@
 
       /* Show named instances. */
 
-      instance_count = face->style_flags >> 16;
+      instance_count = (FT_UInt)face->style_flags >> 16;
       named_styles   = mm->namedstyle;
 
       FT_Get_Default_Named_Instance( face, &default_named_instance );
       default_named_instance--;   /* `named_styles` is a zero-based array */
 
       printf( "\n" );
-      printf( "  named instances (%lu)\n", instance_count );
+      printf( "  named instances (%u)\n", instance_count );
 
       for ( i = 0; i < instance_count; i++ )
       {
