@@ -198,18 +198,18 @@
 
 
       /*
-       * `ftmulti' is a diagnostic tool that should be able to handle
-       * pathological situations also; for this reason the looping code
-       * below is a bit more complicated in comparison to normal
+       * `ftmulti' is a diagnostic tool that should also be able to
+       * handle pathological situations; for this reason the looping
+       * code below is a bit more complicated in comparison to normal
        * applications.
        *
        * In particular, the loop handles the following cases gracefully,
        * avoiding grouping.
        *
-       * . multiple non-hidden axes have the same tag
+       * . multiple non-hidden axes that have the same tag
        *
-       * . multiple hidden axes have the same tag without a corresponding
-       *   non-hidden axis
+       * . multiple hidden axes that have the same tag without a
+       *   corresponding non-hidden axis.
        */
 
       idx = -1;
@@ -234,7 +234,7 @@
         }
         else
         {
-          /* otherwise check whether we have already assigned this axis */
+          /* otherwise, check whether we have already assigned this axis */
           for ( j = 0; j <= idx; j++ )
             if ( shown_axes[j] == i )
             {
@@ -880,7 +880,7 @@
       "  font         The font file(s) to display.\n"
       "\n" );
     fprintf( stderr,
-      "  -d WxH       Set window dimentions (default: %ux%u).\n",
+      "  -d WxH       Set window dimensions (default: %ux%u).\n",
              DIM_X, DIM_Y );
     fprintf( stderr,
       "  -e encoding  Specify encoding tag (default: no encoding).\n"
