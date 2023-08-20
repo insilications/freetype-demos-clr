@@ -341,10 +341,10 @@ else
   # The following programs are not compiled automatically; either comment
   # out the affected line or use the program name as a Makefile target.
   #
-  # EXES += ftchkwd
-  # EXES += ftmemchk
-  # EXES += ftpatchk
-  # EXES += fttimer
+  EXES += ftchkwd
+  EXES += ftmemchk
+  EXES += ftpatchk
+  EXES += fttimer
   # EXES += testname
 
   # Not all demo programs have a man page; we thus check for existence in a
