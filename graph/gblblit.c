@@ -250,7 +250,7 @@ gblender_glyph_upgray( grBitmap*  glyph )
 {
   int        i, size = abs( glyph->pitch ) * glyph->rows;
   uint32_t*  buf = (uint32_t*)glyph->buffer;
-  uint32_t   scale = 255U / ( glyph->grays - 1 );
+  uint32_t   scale = 255U / (uint32_t)( glyph->grays - 1 );
 
 
   /* four bytes at a time */

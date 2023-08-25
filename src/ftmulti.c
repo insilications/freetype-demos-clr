@@ -399,7 +399,7 @@
 
     while ( i < num_glyphs )
     {
-      if ( !( error = LoadChar( i, hinted ) ) )
+      if ( !( error = LoadChar( (unsigned int)i, hinted ) ) )
       {
 #ifdef DEBUG
         if ( i <= first_glyph + 6 )

@@ -845,7 +845,7 @@
     FT_UInt  num_names = FT_Get_Sfnt_Name_Count( face );
     FT_UInt  i;
 
-    FT_SfntName  name;
+    FT_SfntName  name = { 0, 0, 0, 0, NULL, 0 };
 
 
     for ( i = 0; i < num_names; i++ )
